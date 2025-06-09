@@ -36,7 +36,7 @@ MODEL_TRAINER_DIR_NAME: str = "model_trainer"
 MODEL_TRAINER_PRETRAINED_WEIGHT_NAME: str = "yolov5s.pt"
 
 # Number of training epochs to run during model training
-MODEL_TRAINER_NO_EPOCHS: int = 1
+MODEL_TRAINER_NO_EPOCHS: int = 1 # make it 1 for testing, change it to 100-500 for actual training
 
 # Batch size to be used during model training
 MODEL_TRAINER_BATCH_SIZE: int = 16
