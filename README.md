@@ -30,3 +30,4 @@ conda activate waste
 ```bash
 pip install -r requirements.txt
 ```
+## Streamlining AWS Deployments with GitHub Actions CI/CD
