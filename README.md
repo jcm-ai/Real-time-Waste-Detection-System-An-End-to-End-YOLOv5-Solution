@@ -31,3 +31,4 @@ conda activate waste
 pip install -r requirements.txt
 ```
 ## Streamlining AWS Deployments with GitHub Actions CI/CD
+### 1. Login to AWS console
