@@ -33,3 +33,5 @@ pip install -r requirements.txt
 ## Streamlining AWS Deployments with GitHub Actions CI/CD
 ### 1. Login to AWS console
 ### 2. Set up an IAM user for deployments
+
+### 3. Creating an ECR Repository for Docker Image Storage
