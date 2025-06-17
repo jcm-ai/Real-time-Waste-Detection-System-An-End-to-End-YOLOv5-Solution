@@ -35,3 +35,5 @@ pip install -r requirements.txt
 ### 2. Set up an IAM user for deployments
 
 ### 3. Creating an ECR Repository for Docker Image Storage
+
+### 4. Creating an Ubuntu EC2 Instance or Machine
