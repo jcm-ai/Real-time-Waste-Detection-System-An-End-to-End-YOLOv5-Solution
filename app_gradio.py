@@ -51,7 +51,7 @@ def predict_yolov5(input_image):
 
 
 # ---------- GRADIO INTERFACE ----------
-with gr.Blocks(title="🗑️ Waste Detection with YOLOv5") as demo:
+with gr.Blocks(title="🗑️ Real-time Waste Detection System: An End-to-End YOLOv5 Solution") as demo:
     gr.Markdown("## 🔍 Waste Detection System (YOLOv5)")
 
     with gr.Tab("🧠 Train Model"):
