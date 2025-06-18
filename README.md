@@ -37,3 +37,4 @@ pip install -r requirements.txt
 ### 3. Creating an ECR Repository for Docker Image Storage
 
 ### 4. Creating an Ubuntu EC2 Instance or Machine
+### 5. Step-by-Step: Installing Docker on AWS EC2:
