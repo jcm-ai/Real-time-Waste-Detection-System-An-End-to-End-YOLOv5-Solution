@@ -51,7 +51,7 @@ def predict_yolov5(input_image):
 
 
 # ---------- GRADIO INTERFACE ----------
-with gr.Blocks(title="🗑️ Real-time Waste Detection System: An End-to-End YOLOv5 Solution") as demo:
+with gr.Blocks(title="🗑️ Real-time Waste Detection System: An End-to-End YOLOv5 Solution") as app:
     gr.Markdown("## 🔍 Waste Detection System (YOLOv5)")
 
     with gr.Tab("🧠 Train Model"):
@@ -70,4 +70,4 @@ with gr.Blocks(title="🗑️ Real-time Waste Detection System: An End-to-End YO
 
 # Launch
 if __name__ == "__main__":
-    demo.launch(server_name=APP_HOST, server_port=APP_PORT, share=True, debug=True)
+    app.launch(server_name=APP_HOST, server_port=APP_PORT, share=True, debug=True)
