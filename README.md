@@ -38,3 +38,5 @@ pip install -r requirements.txt
 
 ### 4. Creating an Ubuntu EC2 Instance or Machine
 ### 5. Step-by-Step: Installing Docker on AWS EC2:
+
+### 6. Configure EC2 as self-hosted runner:
