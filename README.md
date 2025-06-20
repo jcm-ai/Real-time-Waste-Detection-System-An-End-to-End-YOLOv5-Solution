@@ -51,23 +51,3 @@ AWS ECR Repo URI: 954976285001.dkr.ecr.ap-south-1.amazonaws.com/waste
 ```
 ### 4. Creating an Ubuntu EC2 Instance or Machine
 ### 5. Step-by-Step: Installing Docker on AWS EC2:
-Optional: Install Docker on AWS EC2
-```bash
-sudo apt-get update -y
-```
-```bash
-sudo apt-get upgrade
-```
-Required: Install Docker on AWS EC2
-```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-```
-```bash
-sudo sh get-docker.sh
-```
-```bash
-sudo usermod -aG docker ubuntu
-```
-```bash
-newgrp docker
-```
