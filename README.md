@@ -33,8 +33,41 @@ pip install -r requirements.txt
 ## Streamlining AWS Deployments with GitHub Actions CI/CD
 ### 1. Login to AWS console
 ### 2. Set up an IAM user for deployments
+Policy:
+1. AmazonEC2ContainerRegistryFullAccess
+2. AmazonEC2FullAccess
+
+*With this policy, we can deploy Docker images to Amazon Elastic Container Registry (ECR).*
+Description: About the deployments
+1. Build Docker image from source code
+2. Push Docker image to Amazon ECR (Amazon Elastic Container Registry)
+3. Create an EC2 instance
+3. Run the Docker image on the EC2 instance
+4. Deploy Docker image to AWS EC2 (Amazon Elastic Compute Cloud)
 
 ### 3. Creating an ECR Repository for Docker Image Storage
-
+```bash
+AWS ECR Repo URI: 954976285001.dkr.ecr.ap-south-1.amazonaws.com/waste
+```
 ### 4. Creating an Ubuntu EC2 Instance or Machine
 ### 5. Step-by-Step: Installing Docker on AWS EC2:
+Optional: Install Docker on AWS EC2
+```bash
+sudo apt-get update -y
+```
+```bash
+sudo apt-get upgrade
+```
+Required: Install Docker on AWS EC2
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+```
+```bash
+sudo sh get-docker.sh
+```
+```bash
+sudo usermod -aG docker ubuntu
+```
+```bash
+newgrp docker
+```
