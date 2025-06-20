@@ -14,6 +14,9 @@ COPY . /app_gradio.py
 # The -y flag automatically answers yes to prompts.
 RUN apt update -y && apt install awscli -y
 
+# Upgrade pip to the latest version.
+# This ensures that we have the latest version of pip for installing Python packages.
+RUN pip install --upgrade pip
 # Update the package list, install ffmpeg, libsm6, libxext6, and unzip.
 # ffmpeg is often used for media processing.
 # libsm6 and libxext6 are frequently required by libraries like OpenCV.
