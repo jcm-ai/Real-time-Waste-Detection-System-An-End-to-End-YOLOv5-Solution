@@ -66,7 +66,7 @@ with gr.Blocks(title="🗑️ Waste Detection System (YOLOv5)") as app:
         predict_btn.click(fn=predict_yolov5, inputs=image_input, outputs=image_output)
 
     gr.Markdown("---")
-    gr.Markdown("Built with ❤️ using YOLOv5 and Gradio")
+    gr.Markdown("Built with ❤️ using YOLOv5 and Gradio by [Jagadish Mali](https://github.com/jcm-ai)")
 
 # Launch the Gradio app
 if __name__ == "__main__":
