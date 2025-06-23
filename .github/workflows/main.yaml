@@ -59,7 +59,9 @@ jobs:
     name: Build and Push ECR Image # Name of the Docker image build and push job
     needs: integration # This job will only run if the 'integration' job completes successfully
     runs-on: ubuntu-latest # Specifies the runner environment for this job
-
+    output:
+      image: ${{ steps.build-image.outputs.image }} # Output variable for the built Docker image URI
+      image_digest: ${{ steps.build-image.outputs.image_digest }} # Output variable for the image digest
     steps:
       - name: Checkout Code # Step to checkout the repository code
         uses: actions/checkout@v4
