@@ -68,6 +68,6 @@ with gr.Blocks(title="🗑️ Waste Detection System (YOLOv5)") as app:
     gr.Markdown("---")
     gr.Markdown("Built with ❤️ using YOLOv5 and Gradio by [Jagadish Mali](https://github.com/jcm-ai)")
 
-# Launch the Gradio app
+# Launch
 if __name__ == "__main__":
     app.launch(server_name=APP_HOST, server_port=APP_PORT, share=True, debug=True)
