@@ -61,7 +61,7 @@ jobs:
   # ==============================================================================
   # JOB 2: Build & Push ECR Image
   # ==============================================================================
-  jobs:
+  
   build-and-push-ecr-image:
     name: Build & Push ECR Image
     needs: integration
