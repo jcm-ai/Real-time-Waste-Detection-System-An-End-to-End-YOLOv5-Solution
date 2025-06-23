@@ -61,45 +61,43 @@ jobs:
   # ==============================================================================
   # JOB 2: Build & Push ECR Image
   # ==============================================================================
+  jobs:
   build-and-push-ecr-image:
     name: Build & Push ECR Image
     needs: integration
     runs-on: ubuntu-latest
-
+    
     outputs:
       image: ${{ steps.build-image.outputs.image }}
       image_digest: ${{ steps.build-image.outputs.image_digest }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
+      - id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag & push Docker image
-        id: build-image
-        env:
-          ECR_REGISTRY:   ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG:      ${{ github.sha }}
+      - id: build-image
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
 
-          # export for downstream jobs
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
           digest=$(docker inspect --format='{{index .RepoDigests 0}}' \
-                   $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG)
+                   ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }})
           echo "image_digest=$digest" >> $GITHUB_OUTPUT
+
+      - name: Debug build-image outputs
+        run: |
+          echo "🛠️ build-image.outputs.image      = '${{ steps.build-image.outputs.image }}'"
+          echo "🛠️ build-image.outputs.image_digest = '${{ steps.build-image.outputs.image_digest }}'"
+
 
   # ==============================================================================
   # JOB 3: Continuous Deployment
