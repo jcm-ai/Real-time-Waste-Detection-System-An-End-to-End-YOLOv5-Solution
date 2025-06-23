@@ -51,3 +51,42 @@ AWS ECR Repo URI: 954976285001.dkr.ecr.ap-south-1.amazonaws.com/waste
 ```
 ### 4. Creating an Ubuntu EC2 Instance or Machine
 ### 5. Step-by-Step: Installing Docker on AWS EC2:
+Optional: Install Docker on AWS EC2
+```bash
+sudo apt-get update -y
+```
+```bash
+sudo apt-get upgrade
+```
+Required: Install Docker on AWS EC2
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+```
+```bash
+sudo sh get-docker.sh
+```
+```bash
+sudo usermod -aG docker ubuntu
+```
+```bash
+newgrp docker
+```
+
+### 6. Configure EC2 as self-hosted runner:
+```bash
+Settings>Actions>Runners>New self-hosted runner> choose os> then run command one by one
+```
+
+### 7. Setup GitHub secrets:
+```bash
+Settings>Secrets and variables>Actions>New repository secret
+```
+AWS_ACCESS_KEY_ID = ***********************************
+
+AWS_SECRET_ACCESS_KEY = ***********************************
+
+AWS_REGION = ap-south-1
+
+AWS_ECR_LOGIN_URI = 954976285001.dkr.ecr.ap-south-1.amazonaws.com
+
+ECR_REPOSITORY_NAME = waste
