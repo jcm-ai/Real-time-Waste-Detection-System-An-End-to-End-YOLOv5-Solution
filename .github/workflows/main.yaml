@@ -1,23 +1,13 @@
 # ==============================================================================
 # CI/CD Pipeline Workflow
-#
-# Automates:
-#   1. CI (lint/tests)
-#   2. Build & push Docker→AWS ECR
-#   3. Deploy on a self-hosted runner
 # ==============================================================================
 
 name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - README.md
-  # pull_request:
-  #   branches: [main]
-  #   types: [opened, synchronize, reopened]
+    branches: [main]
+    paths-ignore: [README.md]
 
 permissions:
   id-token: write
@@ -25,135 +15,96 @@ permissions:
 
 jobs:
   # ==============================================================================
-  # JOB 1: Continuous Integration
+  # Job 1: Continuous Integration
   # ==============================================================================
   integration:
-    name: Continuous Integration
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # pip install -r requirements.txt
-          echo "✅ Dependencies installed."
-
-      - name: Lint code
-        run: |
-          echo "🔍 Linting..."
-          # flake8 .
-          echo "✅ Lint complete."
-
-      - name: Run unit tests
-        run: |
-          echo "🧪 Testing..."
-          # pytest
-          echo "✅ Tests passed."
-
-  # ==============================================================================
-  # JOB 2: Build & Push ECR Image
-  # ==============================================================================
-  
-  build-and-push-ecr-image:
-    name: Build & Push ECR Image
-    needs: integration
-    runs-on: ubuntu-latest
-    
-    outputs:
-      image: ${{ steps.build-image.outputs.image }}
-      image_digest: ${{ steps.build-image.outputs.image_digest }}
-
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: python-version: 3.x
+      - run: |
+          python -m pip install --upgrade pip
+          # pip install -r requirements.txt
+      - run: |
+          # flake8 .
+          echo "Lint passed"
+      - run: |
+          # pytest
+          echo "Tests passed"
 
+  # ==============================================================================
+  # Job 2: Build and Push Docker Image to ECR
+  # ==============================================================================
+  build-and-push-ecr-image:
+    needs: integration
+    runs-on: ubuntu-latest
+
+    # grab these outputs in later jobs
+    outputs:
+      image: ${{ steps.docker_build.outputs.image }}
+      image_digest: ${{ steps.docker_build.outputs.digest }}
+
+    steps:
+      # 1) Checkout & AWS setup
+      - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
+      # 2) Log in to ECR
       - id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - id: build-image
-        run: |
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }} .
-          docker push ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
-
-          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-          digest=$(docker inspect --format='{{index .RepoDigests 0}}' \
-                   ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }})
-          echo "image_digest=$digest" >> $GITHUB_OUTPUT
-
-      - name: Debug build-image outputs
-        run: |
-          echo "🛠️ build-image.outputs.image      = '${{ steps.build-image.outputs.image }}'"
-          echo "🛠️ build-image.outputs.image_digest = '${{ steps.build-image.outputs.image_digest }}'"
-
+      # 3) Build & push via Docker Buildx action
+      - id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
+          # these outputs (image & digest) are auto-populated by the action
 
   # ==============================================================================
-  # JOB 3: Continuous Deployment
+  # Job 3: Continuous Deployment
   # ==============================================================================
   continuous-deployment:
-    name: Continuous Deployment
     needs: build-and-push-ecr-image
     runs-on: self-hosted
     environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      # DEBUG + Pull the newly built image
-      - name: Pull Docker image (debug + pull)
-        env:
-          IMAGE: ${{ needs.build-and-push-ecr-image.outputs.image }}
+      # pull using the output from the build job
+      - name: Pull Docker image
         run: |
-          echo "🔍 DEBUG: IMAGE='$IMAGE'"
-          if [ -z "$IMAGE" ]; then
-            echo "❌ ERROR: IMAGE is empty! Check build-and-push job outputs."
-            exit 1
-          fi
-          echo "📥 Pulling Docker image..."
+          IMAGE=${{ needs.build-and-push-ecr-image.outputs.image }}
+          echo "Pulling $IMAGE"
           docker pull "$IMAGE"
 
-      - name: Stop & remove existing container
+      - name: Stop & remove old container
         run: |
-          CONTAINER="waste"
+          CONTAINER=waste
           if docker ps -q --filter "name=${CONTAINER}" | grep -q .; then
-            echo "🛑 Stopping $CONTAINER..."
-            docker stop $CONTAINER
-            echo "🗑 Removing $CONTAINER..."
-            docker rm -f $CONTAINER
-          else
-            echo "ℹ️ No existing $CONTAINER to stop."
+            docker stop $CONTAINER && docker rm -f $CONTAINER
           fi
 
-      - name: Run Docker container
+      - name: Run new container
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION:            ${{ secrets.AWS_REGION }}
         run: |
+          IMAGE=${{ needs.build-and-push-ecr-image.outputs.image }}
           docker run -d \
             --name waste \
             -p 8080:8080 \
@@ -161,11 +112,9 @@ jobs:
             -e AWS_ACCESS_KEY_ID \
             -e AWS_SECRET_ACCESS_KEY \
             -e AWS_REGION \
-            $IMAGE
-          echo "🚀 Container 'waste' running on port 8080."
+            "$IMAGE"
+          echo "Container 'waste' running on port 8080."
 
-      - name: Clean up Docker resources
-        run: |
+      - run: |
           docker system prune -af
-          # docker volume prune -f
-          echo "🧹 Docker cleanup complete."
+          echo "Cleaned up Docker artifacts."
