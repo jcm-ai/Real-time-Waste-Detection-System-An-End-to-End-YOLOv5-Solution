@@ -94,22 +94,22 @@ jobs:
           docker pull ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
 
       # ─── NEW: Check for existing container ──────────────────────────────────────
-      - name: Check for existing container
-        id: check-container
-        run: |
-          if docker ps -q --filter "name=waste" | grep -q .; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+      # - name: Check for existing container
+      #   id: check-container
+      #   run: |
+      #     if docker ps -q --filter "name=waste" | grep -q .; then
+      #       echo "exists=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "exists=false" >> $GITHUB_OUTPUT
+      #     fi
 
-      # ─── NEW: Stop & remove old container if it exists ─────────────────────────
-      - name: Stop old container
-        if: steps.check-container.outputs.exists == 'true'
-        run: |
-          echo "🛑 Stopping existing 'waste' container..."
-          docker stop waste
-          docker rm -fv waste
+      # # ─── NEW: Stop & remove old container if it exists ─────────────────────────
+      # - name: Stop old container
+      #   if: steps.check-container.outputs.exists == 'true'
+      #   run: |
+      #     echo "🛑 Stopping existing 'waste' container..."
+      #     docker stop waste
+      #     docker rm -fv waste
 
       - name: Run Docker Image to serve users
         run: |
