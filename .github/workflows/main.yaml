@@ -1,92 +1,71 @@
 # ==============================================================================
 # CI/CD Pipeline Workflow
 #
-# This GitHub Actions workflow automates:
-#   1. Continuous Integration (linting, tests)
-#   2. Building & pushing a Docker image to AWS ECR
-#   3. Deploying to a self-hosted runner (e.g., EC2) for production
+# Automates:
+#   1. CI (lint/tests)
+#   2. Build & push Docker→AWS ECR
+#   3. Deploy on a self-hosted runner
 # ==============================================================================
 
-name: CI/CD Pipeline  # The overall workflow name shown in the Actions tab
+name: CI/CD Pipeline
 
-# --------------------------------------------------------------------------------
-# Events that trigger this workflow
-# --------------------------------------------------------------------------------
 on:
   push:
     branches:
-      - main            # Only run on pushes to main
+      - main
     paths-ignore:
-      - README.md       # Skip if only docs changed
-  # pull_request:       # Uncomment to run CI on PRs against main
-  #   branches:
-  #     - main
+      - README.md
+  # pull_request:
+  #   branches: [main]
   #   types: [opened, synchronize, reopened]
 
-# --------------------------------------------------------------------------------
-# Permissions granted to all jobs
-# --------------------------------------------------------------------------------
 permissions:
-  id-token: write      # Required for OIDC-based AWS auth
-  contents: read       # Needed to checkout repository contents
+  id-token: write
+  contents: read
 
-# ==============================================================================
-# JOB 1: Continuous Integration
-#   - Check out code
-#   - Set up Python
-#   - Install dependencies
-#   - Lint & unit-test
-# ==============================================================================
 jobs:
+  # ==============================================================================
+  # JOB 1: Continuous Integration
+  # ==============================================================================
   integration:
     name: Continuous Integration
     runs-on: ubuntu-latest
 
     steps:
-      # Step: checkout the repo so we can operate on the code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step: install a specific Python version
-      - name: Set up Python 3.10
+      - name: Set up Python 3.x
         uses: actions/setup-python@v5
         with:
-          python-version: 3.x  # Use '3.x' to always get the latest 3.x version
+          python-version: 3.x
 
-      # Step: install project dependencies (e.g., from requirements.txt)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Uncomment the next line if you have a requirements.txt:
           # pip install -r requirements.txt
           echo "✅ Dependencies installed."
 
-      # Step: lint your codebase (flake8, pylint, etc.)
       - name: Lint code
         run: |
-          echo "🔍 Running linter..."
+          echo "🔍 Linting..."
           # flake8 .
-          echo "✅ Linting completed."
+          echo "✅ Lint complete."
 
-      # Step: run your unit tests (pytest, unittest, etc.)
       - name: Run unit tests
         run: |
-          echo "🧪 Running unit tests..."
+          echo "🧪 Testing..."
           # pytest
-          echo "✅ Unit tests passed."
+          echo "✅ Tests passed."
 
-# ==============================================================================
-# JOB 2: Build & Push Docker Image to AWS ECR
-#   - Depends on successful CI
-#   - Logs into ECR
-#   - Builds, tags, pushes image
-# ==============================================================================
+  # ==============================================================================
+  # JOB 2: Build & Push ECR Image
+  # ==============================================================================
   build-and-push-ecr-image:
     name: Build & Push ECR Image
     needs: integration
     runs-on: ubuntu-latest
 
-    # Outputs from this job used by deployment
     outputs:
       image: ${{ steps.build-image.outputs.image }}
       image_digest: ${{ steps.build-image.outputs.image_digest }}
@@ -95,7 +74,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Configure AWS creds (via secrets or OIDC)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -103,12 +81,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
-      # Log into ECR so we can push
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Build the Docker image, push, and export image URI + digest
       - name: Build, tag & push Docker image
         id: build-image
         env:
@@ -116,27 +92,23 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG:      ${{ github.sha }}
         run: |
-          # Build
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          # Push
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-          # Export outputs for downstream jobs
+          # export for downstream jobs
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
           digest=$(docker inspect --format='{{index .RepoDigests 0}}' \
-                    $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG)
+                   $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG)
           echo "image_digest=$digest" >> $GITHUB_OUTPUT
 
-# ==============================================================================
-# JOB 3: Continuous Deployment
-#   - Runs on self-hosted runner (e.g., EC2 instance)
-#   - Pulls fresh image, stops old container, runs new one
-# ==============================================================================
+  # ==============================================================================
+  # JOB 3: Continuous Deployment
+  # ==============================================================================
   continuous-deployment:
     name: Continuous Deployment
     needs: build-and-push-ecr-image
     runs-on: self-hosted
-    environment: production  # Ties into GitHub Environments & required approvals
+    environment: production
 
     steps:
       - name: Checkout code
@@ -153,12 +125,19 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Pull the newly built image
-      - name: Pull Docker image
+      # DEBUG + Pull the newly built image
+      - name: Pull Docker image (debug + pull)
+        env:
+          IMAGE: ${{ needs.build-and-push-ecr-image.outputs.image }}
         run: |
-          docker pull ${{ needs.build-and-push-ecr-image.outputs.image }}
+          echo "🔍 DEBUG: IMAGE='$IMAGE'"
+          if [ -z "$IMAGE" ]; then
+            echo "❌ ERROR: IMAGE is empty! Check build-and-push job outputs."
+            exit 1
+          fi
+          echo "📥 Pulling Docker image..."
+          docker pull "$IMAGE"
 
-      # Gracefully stop & remove any old 'waste' container
       - name: Stop & remove existing container
         run: |
           CONTAINER="waste"
@@ -171,7 +150,6 @@ jobs:
             echo "ℹ️ No existing $CONTAINER to stop."
           fi
 
-      # Launch the container with env vars injected
       - name: Run Docker container
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -185,12 +163,11 @@ jobs:
             -e AWS_ACCESS_KEY_ID \
             -e AWS_SECRET_ACCESS_KEY \
             -e AWS_REGION \
-            ${{ needs.build-and-push-ecr-image.outputs.image }}
-          echo "🚀 Container 'waste' up and running on port 8080."
+            $IMAGE
+          echo "🚀 Container 'waste' running on port 8080."
 
-      # Cleanup unused images/containers to free space
       - name: Clean up Docker resources
         run: |
           docker system prune -af
-          # docker volume prune -f  # Uncomment if you want to remove volumes too
+          # docker volume prune -f
           echo "🧹 Docker cleanup complete."
