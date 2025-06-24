@@ -4,11 +4,11 @@ FROM python:3.10-slim-buster
 
 # Set the working directory inside the container to /app_gradio.py.
 # All subsequent commands will be run from this directory.
-WORKDIR /app_gradio.py
+WORKDIR /app_gradio
 
 # Copy the entire contents of the current directory (where the Dockerfile is located)
-# into the /app_gradio.py directory inside the container.
-COPY . /app_gradio.py
+# into the /app_gradio directory inside the container.
+COPY . /app_gradio
 
 # Update the package list and install awscli.
 # The -y flag automatically answers yes to prompts.
