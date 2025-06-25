@@ -1,6 +1,11 @@
 # Real-time Waste Detection System: An End-to-End YOLOv5 Solution
 This is a real-time waste detection system, which uses YOLOv5 for object detection. It is a complete solution that includes training and deployment. The system is built using Python, PyTorch, and YOLOv5. It allows users to upload images or videos for waste detection, and the system will provide real-time results.
 
+**Final outcome of this project:**
+
+![waste_detection](https://github.com/user-attachments/assets/e8d7736a-3cb0-47ef-8721-512b00905b09)
+
+
 ### Project Workflow:
 
 1. **constant**: Define constants and configurations for the project.
