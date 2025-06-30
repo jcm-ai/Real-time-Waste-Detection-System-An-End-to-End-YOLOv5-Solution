@@ -5,6 +5,11 @@ This is a real-time waste detection system, which uses YOLOv5 for object detecti
 
 ![waste_detection](https://github.com/user-attachments/assets/e8d7736a-3cb0-47ef-8721-512b00905b09)
 
+## Problem Statement:
+*The escalating global waste crisis poses significant environmental, economic, and public health challenges. Traditional waste management practices often struggle with inefficient collection, sorting, and recycling processes, leading to overflowing landfills, increased pollution, and valuable resource depletion. A key bottleneck in optimizing these processes is the lack of a real-time, accurate, and automated system for identifying and categorizing different types of waste.*
+
+*Current methods frequently rely on manual inspection, which is labor-intensive, prone to human error, and lacks the speed required for large-scale operations. While some automated systems exist, many are limited by their inability to operate in diverse, real-world conditions, differentiate between various waste materials effectively, or provide instant feedback for immediate action. This deficiency hinders efforts to implement smart waste bins, automate sorting facilities, and monitor illegal dumping, ultimately slowing down progress towards sustainable waste management.*
+
 
 ### Project Workflow:
 
