@@ -17,7 +17,7 @@ This is a real-time waste detection system, which uses YOLOv5 for object detecti
 2. **entity**: Define entities for the project.
 3. **components**: Define components for the project.
 4. **pipeline**: Define the pipeline for the project.
-5. **aap.py**: Define the main function for the project.
+5. **app_gradio.py**: Define the main function for the project.
 
 ### How to run the project:
 **clone the repository:**
